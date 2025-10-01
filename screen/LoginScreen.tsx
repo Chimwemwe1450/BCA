@@ -99,7 +99,16 @@ const LoginScreen: React.FC = () => {
           />
         </TouchableOpacity>
       </View>
-
+<Text style={styles.subtitle}>
+  If you forgot your password,{' '}
+  <Text
+    style={styles.registerText}
+    onPress={() => navigation.replace('Forget')}
+  >
+    contact us
+  </Text>
+  .
+</Text>
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
