@@ -18,7 +18,7 @@ const ForgetPasswordScreen: React.FC = () => {
       <Text style={styles.subtitle}>
         Please contact us to reset your password:
       </Text>
-      <Text style={styles.email}>test@gmail.com</Text>
+      <Text style={styles.email}>Ramdaneyakoubi45@gmail.com</Text>
 
       <TouchableOpacity
         style={styles.button}
