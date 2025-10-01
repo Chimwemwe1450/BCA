@@ -4,21 +4,21 @@
     "slug": "Ramy-Taxi-shuttle",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/sports-car.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/sports-car2.png",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/sports-car.png",
+      "image": "./assets/sports-car2.png",
       "resizeMode": "contain",
-      "backgroundColor": "#808080"
+      "backgroundColor": "#6366F1"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/sports-car.png",
-        "backgroundColor": "#808080"
+        "foregroundImage": "./assets/sports-car2.png",
+        "backgroundColor": "#6366F1"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false

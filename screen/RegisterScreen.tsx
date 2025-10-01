@@ -13,31 +13,34 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<
+type RegisterScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'Login'
+  'Register'
 >;
 
-const LoginScreen: React.FC = () => {
-  const navigation = useNavigation<LoginScreenNavigationProp>();
+const Register: React.FC = () => {
+  const navigation = useNavigation<RegisterScreenNavigationProp>();
   const [email, setEmail] = useState<string>('');
+  const [user, setUser] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
-
+ 
   useFocusEffect(
     React.useCallback(() => {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
-        () => true 
+        () => true
       );
 
       return () => backHandler.remove();
     }, [])
   );
 
-  const handleLogin = () => {
+  const handleRegister = () => {
     let missingFields: string[] = [];
+
+    if (!user) missingFields.push('Username');
     if (!email) missingFields.push('Email');
     if (!password) missingFields.push('Password');
 
@@ -46,30 +49,37 @@ const LoginScreen: React.FC = () => {
       return;
     }
 
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Error', 'Please enter a valid Email address');
       return;
     }
 
-
-    navigation.replace('Home');
+    Alert.alert('Success', 'User registered successfully!');
+    navigation.replace('Login'); 
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Register</Text>
       <Text style={styles.subtitle}>
-        If you haven’t created an account yet,{' '}
+        If you already created an account,{' '}
         <Text
           style={styles.registerText}
-          onPress={() => navigation.replace('Register')} 
+          onPress={() => navigation.replace('Login')} 
         >
-          please register
+          please login
         </Text>
         .
       </Text>
+
+      <TextInput
+        placeholder="Username"
+        style={styles.input}
+        value={user}
+        onChangeText={setUser}
+        autoCapitalize="none"
+      />
 
       <TextInput
         placeholder="Email"
@@ -100,14 +110,14 @@ const LoginScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Register</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-export default LoginScreen;
+export default Register;
 
 const styles = StyleSheet.create({
   container: {
