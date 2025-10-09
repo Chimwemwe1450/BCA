@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   BackHandler,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -24,14 +25,9 @@ const LoginScreen: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
-
   useFocusEffect(
     React.useCallback(() => {
-      const backHandler = BackHandler.addEventListener(
-        'hardwareBackPress',
-        () => true 
-      );
-
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
       return () => backHandler.remove();
     }, [])
   );
@@ -46,25 +42,30 @@ const LoginScreen: React.FC = () => {
       return;
     }
 
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Error', 'Please enter a valid Email address');
       return;
     }
 
-
     navigation.replace('Home');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Image
+        source={require('../assets/sports-car2.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
+
+      <Text style={styles.title}>Welcome Back</Text>
+
       <Text style={styles.subtitle}>
         If you haven’t created an account yet,{' '}
         <Text
           style={styles.registerText}
-          onPress={() => navigation.replace('Register')} 
+          onPress={() => navigation.replace('Register')}
         >
           please register
         </Text>
@@ -99,19 +100,22 @@ const LoginScreen: React.FC = () => {
           />
         </TouchableOpacity>
       </View>
-<Text style={styles.subtitle}>
-  If you forgot your password,{' '}
-  <Text
-    style={styles.registerText}
-    onPress={() => navigation.replace('Forget')}
-  >
-    contact us
-  </Text>
-  .
-</Text>
+
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+        <Text style={styles.buttonText}>Sign in</Text>
       </TouchableOpacity>
+
+
+      <Text style={styles.forgotText}>
+        If you forgot your password,{' '}
+        <Text
+          style={styles.registerText}
+          onPress={() => navigation.replace('Forget')}
+        >
+          contact us
+        </Text>
+        .
+      </Text>
     </View>
   );
 };
@@ -124,6 +128,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
     backgroundColor: '#fff',
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    alignSelf: 'center',
+    marginBottom: 20,
   },
   title: {
     fontSize: 32,
@@ -163,9 +173,15 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
+    marginBottom: 25, 
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
+  },
+  forgotText: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center',
   },
 });

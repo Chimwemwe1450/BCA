@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   BackHandler,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -25,14 +26,10 @@ const Register: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
- 
+
   useFocusEffect(
     React.useCallback(() => {
-      const backHandler = BackHandler.addEventListener(
-        'hardwareBackPress',
-        () => true
-      );
-
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
       return () => backHandler.remove();
     }, [])
   );
@@ -56,23 +53,30 @@ const Register: React.FC = () => {
     }
 
     Alert.alert('Success', 'User registered successfully!');
-    navigation.replace('Login'); 
+    navigation.replace('Login');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Register</Text>
+   
+      <Image
+        source={require('../assets/sports-car2.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
+
+      <Text style={styles.title}>Create account</Text>
+
+  
       <Text style={styles.subtitle}>
         If you already created an account,{' '}
-        <Text
-          style={styles.registerText}
-          onPress={() => navigation.replace('Login')} 
-        >
+        <Text style={styles.registerText} onPress={() => navigation.replace('Login')}>
           please login
         </Text>
         .
       </Text>
 
+  
       <TextInput
         placeholder="Username"
         style={styles.input}
@@ -80,6 +84,7 @@ const Register: React.FC = () => {
         onChangeText={setUser}
         autoCapitalize="none"
       />
+
 
       <TextInput
         placeholder="Email"
@@ -90,6 +95,7 @@ const Register: React.FC = () => {
         autoCapitalize="none"
       />
 
+   
       <View style={styles.passwordContainer}>
         <TextInput
           placeholder="Password"
@@ -102,13 +108,10 @@ const Register: React.FC = () => {
           onPress={() => setShowPassword(!showPassword)}
           style={styles.iconButton}
         >
-          <Ionicons
-            name={showPassword ? 'eye' : 'eye-off'}
-            size={24}
-            color="#555"
-          />
+          <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color="#555" />
         </TouchableOpacity>
       </View>
+
 
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Register</Text>
@@ -125,6 +128,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
     backgroundColor: '#fff',
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    alignSelf: 'center',
+    marginBottom: 10,
   },
   title: {
     fontSize: 32,
