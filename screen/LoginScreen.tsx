@@ -32,24 +32,49 @@ const LoginScreen: React.FC = () => {
     }, [])
   );
 
-  const handleLogin = () => {
-    let missingFields: string[] = [];
-    if (!email) missingFields.push('Email');
-    if (!password) missingFields.push('Password');
+const handleLogin = async () => {
+  let missingFields: string[] = [];
+  if (!email) missingFields.push('Email');
+  if (!password) missingFields.push('Password');
 
-    if (missingFields.length > 0) {
-      Alert.alert('Error', `Please enter ${missingFields.join(', ')}`);
-      return;
+  if (missingFields.length > 0) {
+    Alert.alert('Error', `Please enter ${missingFields.join(', ')}`);
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    Alert.alert('Error', 'Please enter a valid Email address');
+    return;
+  }
+
+  try {
+
+    const url = `http://192.168.1.57:5291/api/Users/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+    
+    console.log('➡️ Sending GET request to:', url);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+
+    const data = await response.json();
+  
+    if (data.success) {
+      Alert.alert('Success', 'Login successful!');
+      navigation.replace('Home');
+    } else {
+      Alert.alert('Error', data.message || 'Invalid email or password');
     }
+  } catch (error: any) {
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid Email address');
-      return;
-    }
-
-    navigation.replace('Home');
-  };
+    Alert.alert('Error', 'Something went wrong. Please try again later.');
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -72,7 +97,6 @@ const LoginScreen: React.FC = () => {
         .
       </Text>
 
-
       <TextInput
         placeholder="Email"
         style={styles.input}
@@ -82,7 +106,6 @@ const LoginScreen: React.FC = () => {
         autoCapitalize="none"
       />
 
-   
       <View style={styles.passwordContainer}>
         <TextInput
           placeholder="Password"
@@ -103,11 +126,9 @@ const LoginScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Sign in</Text>
       </TouchableOpacity>
-
 
       <Text style={styles.forgotText}>
         Forgot your password?{' '}
