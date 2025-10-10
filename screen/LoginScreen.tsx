@@ -72,6 +72,7 @@ const LoginScreen: React.FC = () => {
         .
       </Text>
 
+
       <TextInput
         placeholder="Email"
         style={styles.input}
@@ -81,17 +82,18 @@ const LoginScreen: React.FC = () => {
         autoCapitalize="none"
       />
 
+   
       <View style={styles.passwordContainer}>
         <TextInput
           placeholder="Password"
-          style={[styles.input, { paddingRight: 45 }]}
+          style={styles.passwordInput}
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
         />
         <TouchableOpacity
           onPress={() => setShowPassword(!showPassword)}
-          style={styles.iconButton}
+          style={styles.eyeButton}
         >
           <Ionicons
             name={showPassword ? 'eye' : 'eye-off'}
@@ -101,18 +103,19 @@ const LoginScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
+
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Sign in</Text>
       </TouchableOpacity>
 
 
       <Text style={styles.forgotText}>
-        If you forgot your password,{' '}
+        Forgot your password?{' '}
         <Text
           style={styles.registerText}
           onPress={() => navigation.replace('Forget')}
         >
-          contact us
+          Reset it
         </Text>
         .
       </Text>
@@ -126,58 +129,69 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: 25,
     backgroundColor: '#fff',
   },
   logo: {
     width: 120,
     height: 120,
     alignSelf: 'center',
-    marginBottom: 20,
+    marginBottom: 25,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 10,
     alignSelf: 'center',
+    marginBottom: 10,
+    color: '#111',
   },
   subtitle: {
     fontSize: 14,
     color: '#555',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 25,
   },
   registerText: {
     color: '#6366F1',
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 20,
+    backgroundColor: '#f9f9f9',
   },
   passwordContainer: {
-    position: 'relative',
-    marginBottom: 20,
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    backgroundColor: '#f9f9f9',
+    marginBottom: 25,
+    paddingRight: 10,
   },
-  iconButton: {
-    position: 'absolute',
-    right: 12,
-    top: '35%',
-    transform: [{ translateY: -12 }],
+  passwordInput: {
+    flex: 1,
+    padding: 12,
+  },
+  eyeButton: {
+    padding: 8,
   },
   button: {
     backgroundColor: '#6366F1',
-    padding: 15,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: 'center',
-    marginBottom: 25, 
+    marginBottom: 25,
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: '600',
   },
   forgotText: {
     fontSize: 14,

@@ -26,7 +26,6 @@ const Register: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
-
   useFocusEffect(
     React.useCallback(() => {
       const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
@@ -34,7 +33,7 @@ const Register: React.FC = () => {
     }, [])
   );
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     let missingFields: string[] = [];
 
     if (!user) missingFields.push('Username');
@@ -52,31 +51,51 @@ const Register: React.FC = () => {
       return;
     }
 
-    Alert.alert('Success', 'User registered successfully!');
-    navigation.replace('Login');
+    try {
+      const response = await fetch('http://192.168.1.57:5291/api/Users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: user,
+          email: email,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Success', 'User registered successfully!');
+        navigation.replace('Login');
+      } else {
+        Alert.alert('Error', data.message || 'Registration failed.');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      Alert.alert('Error', 'Unable to connect to the server.');
+    }
   };
 
   return (
     <View style={styles.container}>
-   
       <Image
         source={require('../assets/sports-car2.png')}
         style={styles.logo}
         resizeMode="contain"
       />
 
-      <Text style={styles.title}>Create account</Text>
+      <Text style={styles.title}>Create Account</Text>
 
-  
       <Text style={styles.subtitle}>
-        If you already created an account,{' '}
-        <Text style={styles.registerText} onPress={() => navigation.replace('Login')}>
-          please login
+        Already have an account?{' '}
+        <Text style={styles.linkText} onPress={() => navigation.replace('Login')}>
+          Sign in
         </Text>
         .
       </Text>
 
-  
       <TextInput
         placeholder="Username"
         style={styles.input}
@@ -84,7 +103,6 @@ const Register: React.FC = () => {
         onChangeText={setUser}
         autoCapitalize="none"
       />
-
 
       <TextInput
         placeholder="Email"
@@ -95,23 +113,21 @@ const Register: React.FC = () => {
         autoCapitalize="none"
       />
 
-   
       <View style={styles.passwordContainer}>
         <TextInput
           placeholder="Password"
-          style={[styles.input, { paddingRight: 45 }]}
+          style={styles.passwordInput}
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
         />
         <TouchableOpacity
           onPress={() => setShowPassword(!showPassword)}
-          style={styles.iconButton}
+          style={styles.eyeButton}
         >
           <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color="#555" />
         </TouchableOpacity>
       </View>
-
 
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Register</Text>
@@ -126,56 +142,68 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: 25,
     backgroundColor: '#fff',
   },
   logo: {
     width: 120,
     height: 120,
     alignSelf: 'center',
-    marginBottom: 10,
+    marginBottom: 25,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 10,
     alignSelf: 'center',
+    marginBottom: 10,
+    color: '#111',
   },
   subtitle: {
     fontSize: 14,
     color: '#555',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 25,
   },
-  registerText: {
+  linkText: {
     color: '#6366F1',
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 20,
+    backgroundColor: '#f9f9f9',
   },
   passwordContainer: {
-    position: 'relative',
-    marginBottom: 20,
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    backgroundColor: '#f9f9f9',
+    marginBottom: 25,
+    paddingRight: 10,
   },
-  iconButton: {
-    position: 'absolute',
-    right: 12,
-    top: '35%',
-    transform: [{ translateY: -12 }],
+  passwordInput: {
+    flex: 1,
+    padding: 13,
+  },
+  eyeButton: {
+    padding: 8,
   },
   button: {
     backgroundColor: '#6366F1',
-    padding: 15,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: 'center',
+    marginTop: 5,
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: '600',
   },
 });
