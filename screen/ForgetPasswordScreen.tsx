@@ -5,7 +5,11 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Image,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
@@ -24,7 +28,6 @@ const ForgetPasswordScreen: React.FC = () => {
   const [step, setStep] = useState<'email' | 'reset'>('email');
   const [emailError, setEmailError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
 
   useEffect(() => {
     if (!email) {
@@ -85,75 +88,99 @@ const ForgetPasswordScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Forget Password</Text>
-
-      {step === 'email' && (
-        <>
-          <Text style={styles.subtitle}>Enter your email to continue:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.container}>
+          <Image
+            source={require('../assets/sports-car2.png')}
+            style={styles.logo}
+            resizeMode="contain"
           />
-          {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
+          <Text style={styles.title}>Forget Password</Text>
 
-          <TouchableOpacity
-            style={[styles.button, styles.secondaryButton]}
-            onPress={() => navigation.replace('Login')}
-          >
-            <Text style={styles.buttonText}>Back to Login</Text>
-          </TouchableOpacity>
-        </>
-      )}
-
-      {step === 'reset' && (
-        <>
-          <Text style={styles.subtitle}>Enter your new password:</Text>
-
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[styles.input, { flex: 1, marginBottom: 0 }]}
-              placeholder="New Password"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeButton}
-            >
-              <Ionicons
-                name={showPassword ? 'eye' : 'eye-off'}
-                size={24}
-                color="#555"
+          {step === 'email' && (
+            <>
+              <Text style={styles.subtitle}>Enter your email to continue:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
               />
-            </TouchableOpacity>
-          </View>
+              {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
 
-          {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
+              <TouchableOpacity
+                style={[styles.button, styles.secondaryButton]}
+                onPress={() => navigation.replace('Login')}
+              >
+                <Text style={styles.buttonText}>Back to Login</Text>
+              </TouchableOpacity>
+            </>
+          )}
 
-          <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
-            <Text style={styles.buttonText}>Reset Password</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </View>
+          {step === 'reset' && (
+            <>
+              <Text style={styles.subtitle}>Enter your new password:</Text>
+
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="New Password"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeButton}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye' : 'eye-off'}
+                    size={24}
+                    color="#555"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
+
+              <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
+                <Text style={styles.buttonText}>Reset Password</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 export default ForgetPasswordScreen;
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     padding: 25,
     backgroundColor: '#fff',
     alignItems: 'center',
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    alignSelf: 'center',
+    marginBottom: 25,
   },
   title: {
     fontSize: 32,
@@ -186,6 +213,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     marginBottom: 20,
     paddingRight: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 12,
   },
   eyeButton: {
     padding: 8,
