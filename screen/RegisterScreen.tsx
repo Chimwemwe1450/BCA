@@ -8,6 +8,11 @@ import {
   Alert,
   BackHandler,
   Image,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -79,60 +84,76 @@ const Register: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Image
-        source={require('../assets/sports-car2.png')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View>
+            <Image
+              source={require('../assets/sports-car2.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
 
-      <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.title}>Create Account</Text>
 
-      <Text style={styles.subtitle}>
-        Already have an account?{' '}
-        <Text style={styles.linkText} onPress={() => navigation.replace('Login')}>
-          Sign in
-        </Text>
-        .
-      </Text>
+            <Text style={styles.subtitle}>
+              Already have an account?{' '}
+              <Text style={styles.linkText} onPress={() => navigation.replace('Login')}>
+                Sign in
+              </Text>
+              .
+            </Text>
 
-      <TextInput
-        placeholder="Username"
-        style={styles.input}
-        value={user}
-        onChangeText={setUser}
-        autoCapitalize="none"
-      />
+            <TextInput
+              placeholder="Username"
+              style={styles.input}
+              value={user}
+              onChangeText={setUser}
+              autoCapitalize="none"
+            />
 
-      <TextInput
-        placeholder="Email"
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
+            <TextInput
+              placeholder="Email"
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
 
-      <View style={styles.passwordContainer}>
-        <TextInput
-          placeholder="Password"
-          style={styles.passwordInput}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={!showPassword}
-        />
-        <TouchableOpacity
-          onPress={() => setShowPassword(!showPassword)}
-          style={styles.eyeButton}
-        >
-          <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color="#555" />
-        </TouchableOpacity>
-      </View>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                placeholder="Password"
+                style={styles.passwordInput}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeButton}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye' : 'eye-off'}
+                  size={24}
+                  color="#555"
+                />
+              </TouchableOpacity>
+            </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Register</Text>
-      </TouchableOpacity>
-    </View>
+            <TouchableOpacity style={styles.button} onPress={handleRegister}>
+              <Text style={styles.buttonText}>Register</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -141,9 +162,12 @@ export default Register;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 25,
-    backgroundColor: '#fff',
   },
   logo: {
     width: 120,
