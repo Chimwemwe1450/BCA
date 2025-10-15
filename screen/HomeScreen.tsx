@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
 import { RootStackParamList } from '../App';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -9,7 +10,11 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'H
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
-
+  const handleLogout = async () => {
+    await SecureStore.deleteItemAsync('userToken'); 
+    Alert.alert('Logged Out', 'You have been logged out successfully.');
+    navigation.replace('Login'); 
+  };
 
   return (
     <View style={styles.container}>
@@ -18,7 +23,9 @@ const HomeScreen: React.FC = () => {
         This is your home screen after login.
       </Text>
 
-
+      <TouchableOpacity style={styles.button} onPress={handleLogout}>
+        <Text style={styles.buttonText}>Log Out</Text>
+      </TouchableOpacity>
     </View>
   );
 };
