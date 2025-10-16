@@ -1,50 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  BackHandler,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  ActivityIndicator,
+  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert,
+  Image, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../App';
-
-type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
+import { useAuth } from '../navigation/authContext'; // ✅ Import from context
 
 const LoginScreen: React.FC = () => {
-  const navigation = useNavigation<LoginScreenNavigationProp>();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true); // New state
-
-  useEffect(() => {
-    const checkToken = async () => {
-      const token = await SecureStore.getItemAsync('userToken');
-      if (token) {
-        // Token exists, go to Home
-        navigation.replace('Home');
-      } else {
-        // No token, show login screen
-        setCheckingAuth(false);
-      }
-    };
-
-    checkToken();
-
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
-    return () => backHandler.remove();
-  }, []);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -59,97 +26,52 @@ const LoginScreen: React.FC = () => {
     }
 
     try {
-      const url = `http://192.168.1.57:5291/api/Users/login?email=${encodeURIComponent(
-        email
-      )}&password=${encodeURIComponent(password)}`;
+      setLoading(true);
+      const url = `http://192.168.1.57:5291/api/Users/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-      });
-
+      const response = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
       if (!response.ok) throw new Error('Network response was not ok');
 
       const data = await response.json();
-
-      if (data.success) {
-        await SecureStore.setItemAsync('userToken', data.token);
-        Alert.alert('Success', 'Login successful! Token saved.');
-        navigation.replace('Home'); 
+      if (data.success && data.token) {
+        await login(data.token); 
+        Alert.alert('Success', 'Login successful!');
       } else {
         Alert.alert('Error', data.message || 'Invalid email or password');
       }
-    } catch (error: any) {
+    } catch (error) {
       Alert.alert('Error', 'Something went wrong. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (checkingAuth) {
-    // Show loading indicator while checking token
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
-      </View>
-    );
-  }
+  if (loading) return (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color="#6366F1" />
+    </View>
+  );
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <View style={styles.container}>
-          <Image
-            source={require('../assets/sports-car2.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-
+          <Image source={require('../assets/sports-car2.png')} style={styles.logo} resizeMode="contain" />
           <Text style={styles.title}>Welcome Back</Text>
-
           <Text style={styles.subtitle}>
             If you haven’t created an account yet,{' '}
             <Text style={styles.registerText}>please register</Text>.
           </Text>
-
-          <TextInput
-            placeholder="Email"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-
+          <TextInput placeholder="Email" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
           <View style={styles.passwordContainer}>
-            <TextInput
-              placeholder="Password"
-              style={styles.passwordInput}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeButton}
-            >
-              <Ionicons
-                name={showPassword ? 'eye' : 'eye-off'}
-                size={24}
-                color="#555"
-              />
+            <TextInput placeholder="Password" style={styles.passwordInput} value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
+              <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color="#555" />
             </TouchableOpacity>
           </View>
-
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>Sign in</Text>
           </TouchableOpacity>
-
-          <Text style={styles.forgotText}>
-            Forgot your password?{' '}
-            <Text style={styles.registerText}>Reset it</Text>.
-          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -159,83 +81,16 @@ const LoginScreen: React.FC = () => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 25,
-    backgroundColor: '#fff',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  logo: {
-    width: 120,
-    height: 120,
-    alignSelf: 'center',
-    marginBottom: 25,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    alignSelf: 'center',
-    marginBottom: 10,
-    color: '#111',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#555',
-    textAlign: 'center',
-    marginBottom: 25,
-  },
-  registerText: {
-    color: '#6366F1',
-    fontWeight: '600',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 20,
-    backgroundColor: '#f9f9f9',
-  },
-  passwordContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    backgroundColor: '#f9f9f9',
-    marginBottom: 25,
-    paddingRight: 10,
-  },
-  passwordInput: {
-    flex: 1,
-    padding: 12,
-  },
-  eyeButton: {
-    padding: 8,
-  },
-  button: {
-    backgroundColor: '#6366F1',
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 25,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  forgotText: {
-    fontSize: 14,
-    color: '#555',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
+  container: { flex: 1, justifyContent: 'center', padding: 25, backgroundColor: '#fff' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  logo: { width: 120, height: 120, alignSelf: 'center', marginBottom: 25 },
+  title: { fontSize: 32, fontWeight: 'bold', alignSelf: 'center', marginBottom: 10 },
+  subtitle: { fontSize: 14, color: '#555', textAlign: 'center', marginBottom: 25 },
+  registerText: { color: '#6366F1', fontWeight: '600' },
+  input: { borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 10, marginBottom: 20 },
+  passwordContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#ccc', borderRadius: 10, marginBottom: 25, paddingRight: 10 },
+  passwordInput: { flex: 1, padding: 12 },
+  eyeButton: { padding: 8 },
+  button: { backgroundColor: '#6366F1', paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginBottom: 25 },
+  buttonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
 });
