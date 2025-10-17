@@ -4,9 +4,11 @@ import {
   Image, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../navigation/authContext'; // ✅ Import from context
+import { useNavigation } from '@react-navigation/native'; // ✅ navigation hook
+import { useAuth } from '../navigation/authContext';
 
 const LoginScreen: React.FC = () => {
+  const navigation = useNavigation<any>(); // ✅ Add navigation
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,7 +36,7 @@ const LoginScreen: React.FC = () => {
 
       const data = await response.json();
       if (data.success && data.token) {
-        await login(data.token); 
+        await login(data.token);
         Alert.alert('Success', 'Login successful!');
       } else {
         Alert.alert('Error', data.message || 'Invalid email or password');
@@ -46,11 +48,12 @@ const LoginScreen: React.FC = () => {
     }
   };
 
-  if (loading) return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#6366F1" />
-    </View>
-  );
+  if (loading)
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6366F1" />
+      </View>
+    );
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -62,15 +65,37 @@ const LoginScreen: React.FC = () => {
             If you haven’t created an account yet,{' '}
             <Text style={styles.registerText}>please register</Text>.
           </Text>
-          <TextInput placeholder="Email" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+
+          <TextInput
+            placeholder="Email"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+
           <View style={styles.passwordContainer}>
-            <TextInput placeholder="Password" style={styles.passwordInput} value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
+            <TextInput
+              placeholder="Password"
+              style={styles.passwordInput}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
               <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color="#555" />
             </TouchableOpacity>
           </View>
+
+        
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>Sign in</Text>
+          </TouchableOpacity>
+
+  
+          <TouchableOpacity onPress={() => navigation.navigate('Forget')}>
+            <Text style={styles.forgotText}>Forgot your password?</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -93,4 +118,5 @@ const styles = StyleSheet.create({
   eyeButton: { padding: 8 },
   button: { backgroundColor: '#6366F1', paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginBottom: 25 },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
+  forgotText: { fontSize: 17, color: '#6366F1', textAlign: 'center' },
 });
