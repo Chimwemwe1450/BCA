@@ -12,7 +12,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+import { useAuth } from '../navigation/authContext'; 
 const { width } = Dimensions.get('window');
 const DRAWER_WIDTH = width * 0.75;
 
@@ -28,16 +28,17 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
   isOpen,
   onClose,
   onLogout,
-  userName = 'User Name',
-  userEmail = 'user@example.com',
 }) => {
+    const { user } = useAuth();
   const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [visible, setVisible] = React.useState(isOpen);
-
+ const userName = user?.name || 'User Name loll';
+  const userEmail = user?.email || 'user@example.com';
+  
   useEffect(() => {
     if (isOpen) {
-      setVisible(true); // Show modal first
+      setVisible(true); 
       Animated.parallel([
         Animated.spring(slideAnim, {
           toValue: 0,
@@ -63,7 +64,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
           duration: 250,
           useNativeDriver: true,
         }),
-      ]).start(() => setVisible(false)); // Hide modal after animation
+      ]).start(() => setVisible(false));
     }
   }, [isOpen]);
 
@@ -77,7 +78,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
     onLogout();
   };
 
-  if (!visible) return null; // Don't render if not visible
+  if (!visible) return null; 
 
   return (
     <Modal
@@ -88,12 +89,11 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       statusBarTranslucent
     >
       <View style={styles.modalContainer}>
-        {/* Overlay */}
+        
         <TouchableWithoutFeedback onPress={onClose}>
           <Animated.View style={[styles.overlay, { opacity: fadeAnim }]} />
         </TouchableWithoutFeedback>
 
-        {/* Drawer Menu */}
         <Animated.View
           style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
         >
