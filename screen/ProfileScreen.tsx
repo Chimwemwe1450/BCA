@@ -12,23 +12,66 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../navigation/authContext';
+
 const ProfileScreen: React.FC = () => {
-    const { user } = useAuth();
-  const { logout } = useAuth();
-    const handleLogout = async () => {
-      await logout();
-      Alert.alert('Logged Out', 'You have been logged out successfully.');
-    };
- const userName = user?.name || 'User Name';
+  const { user, logout, token } = useAuth();
+  
+  const handleLogout = async () => {
+    await logout();
+    Alert.alert('Logged Out', 'You have been logged out successfully.');
+  };
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await fetch(`http://192.168.1.57:5291/api/Users/${user?.id}`, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+              });
+
+              const result = await response.json();
+
+              if (response.ok && result.success) {
+                Alert.alert('Success', 'Your account has been deleted successfully.');
+                await logout();
+              } else {
+                Alert.alert('Error', result.error || 'Failed to delete account.');
+              }
+            } catch (error) {
+              console.error('Delete account error:', error);
+              Alert.alert('Error', 'Unable to connect to the server.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const userName = user?.name || 'User Name';
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         
-        {/* Add top spacing */}
+ 
         <View style={styles.topSpacing} />
         
-        {/* Header Section */}
+      
         <View style={styles.header}>
           <View style={styles.profileInfo}>
             <Image 
@@ -41,8 +84,6 @@ const ProfileScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Menu Items */}
-   {/* Menu Items */}
         <View style={styles.menuSection}>
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="person-outline" size={24} color="#333" />
@@ -62,10 +103,11 @@ const ProfileScreen: React.FC = () => {
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
         </View>
-        {/* Divider */}
+
+ 
         <View style={styles.divider} />
 
-        {/* Saved Places Section */}
+       
         <View style={styles.savedPlacesSection}>
           <Text style={styles.sectionTitle}>Saved places</Text>
           <TouchableOpacity style={styles.enterLocationButton}>
@@ -73,14 +115,14 @@ const ProfileScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Account Actions Section */}
+      
         <View style={styles.accountActionsSection}>
-          <TouchableOpacity style={styles.logoutButton}  onPress={handleLogout}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#6366F1" />
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.deleteAccountButton}>
+          <TouchableOpacity style={styles.deleteAccountButton} onPress={handleDeleteAccount}>
             <Ionicons name="trash-outline" size={24} color="#EF4444" />
             <Text style={styles.deleteAccountText}>Delete Account</Text>
           </TouchableOpacity>
@@ -100,7 +142,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topSpacing: {
-    height: 20, // Added top spacing
+    height: 20,
   },
   header: {
     padding: 20,
@@ -127,44 +169,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 5,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rating: {
-    fontSize: 16,
-    color: '#666',
-    marginLeft: 5,
-  },
-  improvementBanner: {
-    backgroundColor: '#6366F1',
-    margin: 20,
-    padding: 20,
-    borderRadius: 12,
-  },
-  improvementTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 5,
-  },
-  improvementSubtitle: {
-    fontSize: 14,
-    color: '#E0E7FF',
-    marginBottom: 10,
-  },
-  suggestionBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignSelf: 'flex-start',
-  },
-  suggestionText: {
-    fontSize: 12,
-    color: '#fff',
-    fontWeight: '600',
   },
   menuSection: {
     paddingHorizontal: 20,
@@ -238,27 +242,6 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     marginLeft: 15,
     fontWeight: '500',
-  },
-  bottomNavigation: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  navText: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  navTextActive: {
-    color: '#6366F1',
-    fontWeight: '600',
   },
 });
 

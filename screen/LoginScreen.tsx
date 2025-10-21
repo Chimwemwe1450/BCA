@@ -29,100 +29,6 @@ const LoginScreen: React.FC = () => {
 
     try {
       setLoading(true);
-      
-      // Step 1: Login to get token
-      const loginUrl = `http://192.168.1.57:5291/api/Users/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
-      
-      console.log('Attempting login...');
-      const loginResponse = await fetch(loginUrl, { 
-        method: 'GET', 
-        headers: { 
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        } 
-      });
-      
-      if (!loginResponse.ok) {
-        throw new Error(`HTTP error! status: ${loginResponse.status}`);
-      }
-      
-      const loginData = await loginResponse.json();
-      console.log('Login response:', loginData);
-      
-      if (loginData.success && loginData.token) {
-   
-        try {
-
-          const userProfileUrl = `http://192.168.1.57:5291/api/Users/profile`;
-          const profileResponse = await fetch(userProfileUrl, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${loginData.token}`,
-              'Accept': 'application/json'
-            }
-          });
-          
-          if (profileResponse.ok) {
-            const userData = await profileResponse.json();
-            console.log('User profile data:', userData);
-            
-    
-            await login(loginData.token, {
-              name: userData.name || userData.fullName || email.split('@')[0],
-              email: userData.email || email
-            });
-          } else {
-        
-            if (loginData.user) {
-              await login(loginData.token, {
-                name: loginData.user.name || loginData.user.fullName || email.split('@')[0],
-                email: loginData.user.email || email
-              });
-            } else {
-        
-              await login(loginData.token, {
-                name: email.split('@')[0], 
-                email: email
-              });
-            }
-          }
-        } catch (profileError) {
-          console.log('Profile fetch failed, using basic user info:', profileError);
-
-          await login(loginData.token, {
-            name: email.split('@')[0],
-            email: email
-          });
-        }
-        
-        Alert.alert('Success', 'Login successful!');
-
-      } else {
-        Alert.alert('Error', loginData.message || 'Invalid email or password');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      Alert.alert('Error', 'Something went wrong. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
- 
-  const handleLoginSimplified = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please enter Email and Password');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid Email address');
-      return;
-    }
-
-    try {
-      setLoading(true);
       const url = `http://192.168.1.57:5291/api/Users/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
 
       const response = await fetch(url, { 
@@ -136,21 +42,25 @@ const LoginScreen: React.FC = () => {
       if (!response.ok) throw new Error('Network response was not ok');
       
       const data = await response.json();
-      console.log('API Response:', data);
+      
       
       if (data.success && data.token) {
- 
-        const userName = data.user?.name || 
-                        data.user?.fullName || 
-                        data.name || 
-                        data.fullName || 
-                        email.split('@')[0]; 
-        
-        const userEmail = data.user?.email || data.email || email;
-        
+   
 
+        const userId = data.user?.id;
+        const userName = data.user?.username; 
+        const userEmail = data.user?.email; 
+        
+     
+        if (!userId || !userName || !userEmail) {
+          console.error('Missing user data:', { userId, userName, userEmail });
+          throw new Error('Incomplete user data received from server');
+        }
+        
+       
         await login(data.token, {
-          name: userName,
+          id: userId,
+          name: userName, 
           email: userEmail
         });
         
@@ -217,7 +127,7 @@ const LoginScreen: React.FC = () => {
 
           <TouchableOpacity 
             style={styles.button} 
-            onPress={handleLoginSimplified} 
+            onPress={handleLogin}
             disabled={loading}
           >
             <Text style={styles.buttonText}>

@@ -14,7 +14,7 @@ const HomeScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+  
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => setIsDrawerOpen(true)}
@@ -24,7 +24,7 @@ const HomeScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Center Content */}
+      
       <View style={styles.centerContent}>
         <Text style={styles.title}>Welcome to the App!</Text>
         <Text style={styles.subtitle}>This is your home screen after login.</Text>
@@ -34,7 +34,6 @@ const HomeScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Drawer Menu */}
       <DrawerMenu
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
