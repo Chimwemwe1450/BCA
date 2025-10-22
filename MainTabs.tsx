@@ -1,13 +1,28 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View } from 'react-native';
 
 import HomeScreen from './screen/HomeScreen';
 import ProfileScreen from './screen/ProfileScreen';
+import PersonalInfoScreen from './screen/Personalinfoscreen';
+import LanguageScreen from './screen/Languagescreen';
 
 const Tab = createBottomTabNavigator();
+const ProfileStack = createNativeStackNavigator();
+
+
+const ProfileStackNavigator = () => {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
+      <ProfileStack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
+      <ProfileStack.Screen name="Language" component={LanguageScreen} />
+    </ProfileStack.Navigator>
+  );
+};
 
 const MainTabs: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -46,7 +61,7 @@ const MainTabs: React.FC = () => {
         })}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Profile" component={ProfileScreen} />
+        <Tab.Screen name="Profile" component={ProfileStackNavigator} />
       </Tab.Navigator>
     </View>
   );
