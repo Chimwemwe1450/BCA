@@ -2,17 +2,19 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 
 type User = {
-  id: number; // ✅ Added id field
+  id: number;
   name: string;
   email: string;
+  image?: string; 
 };
 
 type AuthContextType = {
   token: string | null;
   user: User | null;
-  login: (token: string, user: User) => Promise<void>; // ✅ User is now required
+  login: (token: string, user: User) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  updateUser: (updates: Partial<User>) => Promise<void>; 
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: async () => {},
   loading: true,
+  updateUser: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -33,21 +36,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const loadStoredData = async () => {
       try {
-        const savedToken = await SecureStore.getItemAsync('userToken');
-        const savedId = await SecureStore.getItemAsync('userId');
-        const savedName = await SecureStore.getItemAsync('userName');
-        const savedEmail = await SecureStore.getItemAsync('userEmail');
+        const [savedToken, savedId, savedName, savedEmail, savedImage] = await Promise.all([
+          SecureStore.getItemAsync('userToken'),
+          SecureStore.getItemAsync('userId'),
+          SecureStore.getItemAsync('userName'),
+          SecureStore.getItemAsync('userEmail'),
+          SecureStore.getItemAsync('userImage'), 
+        ]);
 
         if (savedToken && savedId && savedName && savedEmail) {
           setToken(savedToken);
           setUser({ 
             id: parseInt(savedId), 
             name: savedName, 
-            email: savedEmail 
+            email: savedEmail,
+            image: savedImage || undefined, 
           });
         }
       } catch (error) {
-        console.error('Error loading stored user data:', error);
+ 
       } finally {
         setLoading(false);
       }
@@ -58,53 +65,86 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (userToken: string, userData: User) => {
     try {
-     
       if (!userToken || !userData?.id || !userData?.name || !userData?.email) {
         throw new Error('Invalid login data: token, id, name, and email are required');
       }
 
-     
-      await SecureStore.setItemAsync('userToken', userToken);
-      await SecureStore.setItemAsync('userId', userData.id.toString());
-      await SecureStore.setItemAsync('userName', userData.name);
-      await SecureStore.setItemAsync('userEmail', userData.email);
-      
+      await Promise.all([
+        SecureStore.setItemAsync('userToken', userToken),
+        SecureStore.setItemAsync('userId', userData.id.toString()),
+        SecureStore.setItemAsync('userName', userData.name),
+        SecureStore.setItemAsync('userEmail', userData.email),
+        userData.image ? SecureStore.setItemAsync('userImage', userData.image) : Promise.resolve(),
+      ]);
 
       setToken(userToken);
       setUser(userData);
-
-      console.log('Login successful:', { 
-        id: userData.id,
-        user: userData.name, 
-        email: userData.email 
-      });
     } catch (error) {
-      console.error('Error during login:', error);
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-  
-      await SecureStore.deleteItemAsync('userToken');
-      await SecureStore.deleteItemAsync('userId');
-      await SecureStore.deleteItemAsync('userName');
-      await SecureStore.deleteItemAsync('userEmail');
-      
- 
+      // ✅ Clear all stored data
+      await Promise.all([
+        SecureStore.deleteItemAsync('userToken'),
+        SecureStore.deleteItemAsync('userId'),
+        SecureStore.deleteItemAsync('userName'),
+        SecureStore.deleteItemAsync('userEmail'),
+        SecureStore.deleteItemAsync('userImage'), // ✅ Clear image too
+      ]);
+
+      // ✅ Clear state
       setToken(null);
       setUser(null);
-
-      console.log('Logout successful - user data cleared');
     } catch (error) {
-      console.error('Error during logout:', error);
+      throw error;
+    }
+  };
+
+
+  const updateUser = async (updates: Partial<User>) => {
+    try {
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+
+      const updatedUser = { ...user, ...updates };
+      
+ 
+      const storageUpdates = [];
+      
+      if (updates.name !== undefined) {
+        storageUpdates.push(SecureStore.setItemAsync('userName', updates.name));
+      }
+      if (updates.email !== undefined) {
+        storageUpdates.push(SecureStore.setItemAsync('userEmail', updates.email));
+      }
+      if (updates.image !== undefined) {
+        if (updates.image) {
+          storageUpdates.push(SecureStore.setItemAsync('userImage', updates.image));
+        } else {
+          storageUpdates.push(SecureStore.deleteItemAsync('userImage'));
+        }
+      }
+
+      await Promise.all(storageUpdates);
+      setUser(updatedUser);
+    } catch (error) {
       throw error;
     }
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      token, 
+      user, 
+      login, 
+      logout, 
+      loading,
+      updateUser, // ✅ Include the new function
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -29,9 +29,7 @@ const HomeScreen: React.FC = () => {
         <Text style={styles.title}>Welcome to the App!</Text>
         <Text style={styles.subtitle}>This is your home screen after login.</Text>
 
-        <TouchableOpacity style={styles.button} onPress={handleLogout}>
-          <Text style={styles.buttonText}>Log Out</Text>
-        </TouchableOpacity>
+ 
       </View>
 
       <DrawerMenu

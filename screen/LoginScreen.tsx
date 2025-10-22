@@ -53,7 +53,7 @@ const LoginScreen: React.FC = () => {
         
      
         if (!userId || !userName || !userEmail) {
-          console.error('Missing user data:', { userId, userName, userEmail });
+       
           throw new Error('Incomplete user data received from server');
         }
         
@@ -69,7 +69,7 @@ const LoginScreen: React.FC = () => {
         Alert.alert('Error', data.message || 'Invalid email or password');
       }
     } catch (error) {
-      console.error('Login error:', error);
+    
       Alert.alert('Error', 'Something went wrong. Please try again later.');
     } finally {
       setLoading(false);

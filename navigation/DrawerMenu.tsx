@@ -1,5 +1,4 @@
-// DrawerMenu.tsx
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,9 +9,12 @@ import {
   TouchableWithoutFeedback,
   Modal,
   StatusBar,
+  Image,
+  ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../navigation/authContext'; 
+
 const { width } = Dimensions.get('window');
 const DRAWER_WIDTH = width * 0.75;
 
@@ -29,11 +31,13 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
   onClose,
   onLogout,
 }) => {
-    const { user } = useAuth();
+  const { user, token } = useAuth();
+  const [loadingImage, setLoadingImage] = useState(false);
   const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [visible, setVisible] = React.useState(isOpen);
- const userName = user?.name || 'User Name loll';
+  
+  const userName = user?.name || 'User Name';
   const userEmail = user?.email || 'user@example.com';
   
   useEffect(() => {
@@ -68,9 +72,79 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
     }
   }, [isOpen]);
 
+
+  const getUserImage = async (userId: number) => {
+    try {
+      const API_URL = `http://192.168.1.57:5291/api/Users/${userId}/image`;
+   
+      
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+   
+        return null;
+      }
+
+      const responseText = await response.text();
+      
+      if (!responseText || responseText.trim() === '') {
+       
+        return null;
+      }
+
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+     
+        return null;
+      }
+
+      if (result.success && result.image) {
+        return result.image;
+      } else {
+        
+        return null;
+      }
+    } catch (error) {
+     
+      return null;
+    }
+  };
+
+
+  useEffect(() => {
+    if (isOpen && user?.id && !user?.image) {
+      loadUserImage();
+    }
+  }, [isOpen, user?.id]);
+
+  const loadUserImage = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoadingImage(true);
+      const imageData = await getUserImage(user.id);
+      if (imageData) {
+    
+    
+      }
+    } catch (error) {
+ 
+    } finally {
+      setLoadingImage(false);
+    }
+  };
+
   const handleMenuItemPress = (item: string) => {
     onClose();
-    console.log(`${item} pressed`);
+    
   };
 
   const handleLogout = () => {
@@ -98,7 +172,26 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
           style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
         >
           <View style={styles.drawerHeader}>
-            <Ionicons name="person-circle-outline" size={80} color="#fff" />
+            <View style={styles.imageContainer}>
+              {user?.image ? (
+                <Image 
+                  source={{ uri: user.image }} 
+                  style={styles.profileImage}
+                  onError={(e) => {
+                 
+                  }}
+                />
+              ) : (
+                <View style={styles.profileIcon}>
+                  <Ionicons name="person" size={40} color="#fff" />
+                </View>
+              )}
+              {loadingImage && (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="small" color="#fff" />
+                </View>
+              )}
+            </View>
             <Text style={styles.drawerHeaderText}>{userName}</Text>
             <Text style={styles.drawerHeaderSubtext}>{userEmail}</Text>
           </View>
@@ -190,6 +283,39 @@ const styles = StyleSheet.create({
     backgroundColor: '#6366F1',
     padding: 20,
     paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 40 : 60,
+    alignItems: 'center',
+  },
+  imageContainer: {
+    position: 'relative',
+    marginBottom: 10,
+  },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#f0f0f0',
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  profileIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 40,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   drawerHeaderText: {
