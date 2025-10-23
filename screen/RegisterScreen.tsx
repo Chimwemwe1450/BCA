@@ -28,6 +28,7 @@ const Register: React.FC = () => {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
   const [email, setEmail] = useState<string>('');
   const [user, setUser] = useState<string>('');
+  const [phone, setPhone] = useState<string>('+27');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
@@ -38,11 +39,21 @@ const Register: React.FC = () => {
     }, [])
   );
 
+  const handlePhoneChange = (text: string) => {
+    // Ensure phone always starts with +27
+    if (!text.startsWith('+27')) {
+      setPhone('+27');
+    } else {
+      setPhone(text);
+    }
+  };
+
   const handleRegister = async () => {
     let missingFields: string[] = [];
 
     if (!user) missingFields.push('Username');
     if (!email) missingFields.push('Email');
+    if (!phone) missingFields.push('Phone');
     if (!password) missingFields.push('Password');
 
     if (missingFields.length > 0) {
@@ -56,6 +67,13 @@ const Register: React.FC = () => {
       return;
     }
 
+    // Validate phone number format
+    const phoneRegex = /^\+27[0-9]{9}$/; // +27 followed by 9 digits
+    if (!phoneRegex.test(phone)) {
+      Alert.alert('Error', 'Please enter a valid South African phone number (e.g., +27123456789)');
+      return;
+    }
+
     try {
       const response = await fetch('http://192.168.1.57:5291/api/Users', {
         method: 'POST',
@@ -66,6 +84,7 @@ const Register: React.FC = () => {
           username: user,
           email: email,
           password: password,
+          phone: phone,
         }),
       });
 
@@ -75,7 +94,7 @@ const Register: React.FC = () => {
         Alert.alert('Success', 'User registered successfully!');
         navigation.replace('Login');
       } else {
-        Alert.alert('Error', data.message || 'Registration failed.');
+        Alert.alert('Error', data.error || data.message || 'Registration failed.');
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -126,6 +145,19 @@ const Register: React.FC = () => {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+
+            <TextInput
+              placeholder="+27XXXXXXXXX"
+              style={styles.input}
+              value={phone}
+              onChangeText={handlePhoneChange}
+              keyboardType="phone-pad"
+              autoCapitalize="none"
+              maxLength={12} // +27 + 9 digits = 12 characters
+            />
+            <Text style={styles.phoneHint}>
+              South African number (e.g., +27123456789)
+            </Text>
 
             <View style={styles.passwordContainer}>
               <TextInput
@@ -197,8 +229,14 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     padding: 12,
     borderRadius: 10,
-    marginBottom: 20,
+    marginBottom: 10,
     backgroundColor: '#f9f9f9',
+  },
+  phoneHint: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 20,
+    marginLeft: 5,
   },
   passwordContainer: {
     width: '100%',

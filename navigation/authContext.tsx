@@ -5,6 +5,7 @@ type User = {
   id: number;
   name: string;
   email: string;
+  phone: string; // ✅ Added phone field
   image?: string; 
 };
 
@@ -36,11 +37,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const loadStoredData = async () => {
       try {
-        const [savedToken, savedId, savedName, savedEmail, savedImage] = await Promise.all([
+        const [savedToken, savedId, savedName, savedEmail, savedPhone, savedImage] = await Promise.all([
           SecureStore.getItemAsync('userToken'),
           SecureStore.getItemAsync('userId'),
           SecureStore.getItemAsync('userName'),
           SecureStore.getItemAsync('userEmail'),
+          SecureStore.getItemAsync('userPhone'), // ✅ Load phone
           SecureStore.getItemAsync('userImage'), 
         ]);
 
@@ -50,11 +52,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: parseInt(savedId), 
             name: savedName, 
             email: savedEmail,
+            phone: savedPhone || '', // ✅ Set phone (empty string if not exists for backward compatibility)
             image: savedImage || undefined, 
           });
         }
       } catch (error) {
- 
+        // Error handling without console.log
       } finally {
         setLoading(false);
       }
@@ -65,8 +68,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (userToken: string, userData: User) => {
     try {
-      if (!userToken || !userData?.id || !userData?.name || !userData?.email) {
-        throw new Error('Invalid login data: token, id, name, and email are required');
+      if (!userToken || !userData?.id || !userData?.name || !userData?.email || !userData?.phone) {
+        throw new Error('Invalid login data: token, id, name, email, and phone are required');
       }
 
       await Promise.all([
@@ -74,6 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         SecureStore.setItemAsync('userId', userData.id.toString()),
         SecureStore.setItemAsync('userName', userData.name),
         SecureStore.setItemAsync('userEmail', userData.email),
+        SecureStore.setItemAsync('userPhone', userData.phone), // ✅ Store phone
         userData.image ? SecureStore.setItemAsync('userImage', userData.image) : Promise.resolve(),
       ]);
 
@@ -92,7 +96,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         SecureStore.deleteItemAsync('userId'),
         SecureStore.deleteItemAsync('userName'),
         SecureStore.deleteItemAsync('userEmail'),
-        SecureStore.deleteItemAsync('userImage'), // ✅ Clear image too
+        SecureStore.deleteItemAsync('userPhone'), // ✅ Clear phone too
+        SecureStore.deleteItemAsync('userImage'),
       ]);
 
       // ✅ Clear state
@@ -103,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-
+  // ✅ Update user data (useful for profile updates)
   const updateUser = async (updates: Partial<User>) => {
     try {
       if (!user) {
@@ -112,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const updatedUser = { ...user, ...updates };
       
- 
+      // ✅ Update secure storage for changed fields
       const storageUpdates = [];
       
       if (updates.name !== undefined) {
@@ -120,6 +125,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       if (updates.email !== undefined) {
         storageUpdates.push(SecureStore.setItemAsync('userEmail', updates.email));
+      }
+      if (updates.phone !== undefined) {
+        storageUpdates.push(SecureStore.setItemAsync('userPhone', updates.phone)); // ✅ Update phone
       }
       if (updates.image !== undefined) {
         if (updates.image) {
@@ -143,7 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login, 
       logout, 
       loading,
-      updateUser, // ✅ Include the new function
+      updateUser,
     }}>
       {children}
     </AuthContext.Provider>
