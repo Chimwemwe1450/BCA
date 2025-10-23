@@ -28,6 +28,7 @@ const ForgetPasswordScreen: React.FC = () => {
   const [step, setStep] = useState<'email' | 'reset'>('email');
   const [emailError, setEmailError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   useEffect(() => {
     if (!email) {
@@ -35,30 +36,63 @@ const ForgetPasswordScreen: React.FC = () => {
       return;
     }
 
-    const checkEmail = async () => {
-      try {
-        const response = await fetch('http://192.168.1.57:5291/api/Users');
-        const data = await response.json();
+    const timer = setTimeout(async () => {
+      await checkEmail();
+    }, 500);
 
-        const userExists = data.some((u: any) => u.email === email);
-        if (userExists) {
-          if (step !== 'reset') {
-            Alert.alert('Success', 'Email found! You can now reset your password.');
-          }
-          setStep('reset');
-          setEmailError('');
-        } else {
-          setEmailError('Email does not exist.');
-          setStep('email');
-        }
-      } catch (error) {
-        console.log('Error checking email:', error);
-        setEmailError('Unable to check email.');
-      }
-    };
-
-    checkEmail();
+    return () => clearTimeout(timer);
   }, [email]);
+
+  const checkEmail = async () => {
+    if (!email) return;
+    
+    setIsCheckingEmail(true);
+    try {
+      const response = await fetch('http://192.168.1.57:5291/api/Users');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+
+      let users = [];
+      if (data && Array.isArray(data)) {
+   
+        users = data;
+      } else if (data && data.users && Array.isArray(data.users)) {
+      
+        users = data.users;
+      } else if (data && data.success && Array.isArray(data.users)) {
+
+        users = data.users;
+      }
+      
+      console.log('Users found:', users.length); 
+ 
+      const normalizedInputEmail = email.toLowerCase().trim();
+      const userExists = users.some((u: any) => 
+        u.email && u.email.toLowerCase().trim() === normalizedInputEmail
+      );
+      
+      if (userExists) {
+        if (step !== 'reset') {
+          Alert.alert('Success', 'Email found! You can now reset your password.');
+        }
+        setStep('reset');
+        setEmailError('');
+      } else {
+        setEmailError('Email does not exist.');
+        setStep('email');
+      }
+    } catch (error) {
+      console.error('Error checking email:', error);
+      setEmailError('Unable to check email. Please try again.');
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
 
   const handleResetPassword = async () => {
     if (!newPassword) {
@@ -66,11 +100,16 @@ const ForgetPasswordScreen: React.FC = () => {
       return;
     }
 
+    if (newPassword.length < 6) {
+      setEmailError('Password must be at least 6 characters long.');
+      return;
+    }
+
     try {
       const response = await fetch('http://192.168.1.57:5291/api/Users/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, newPassword }),
+        body: JSON.stringify({ email: email.trim(), newPassword }),
       });
 
       const data = await response.json();
@@ -80,10 +119,18 @@ const ForgetPasswordScreen: React.FC = () => {
         Alert.alert('Success', 'Password has been reset. You can now login.');
         navigation.replace('Login');
       } else {
-        setEmailError(data.error || 'Something went wrong.');
+        setEmailError(data.error || 'Something went wrong. Please try again.');
       }
     } catch (error) {
-      setEmailError('Unable to connect to the server.');
+      setEmailError('Unable to connect to the server. Please check your connection.');
+    }
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    // Reset step when user starts typing a new email
+    if (step === 'reset') {
+      setStep('email');
     }
   };
 
@@ -111,11 +158,15 @@ const ForgetPasswordScreen: React.FC = () => {
                 style={styles.input}
                 placeholder="Enter your email"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={handleEmailChange}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoComplete="email"
               />
-              {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
+              {isCheckingEmail && <Text style={styles.checking}>Checking email...</Text>}
+              {emailError ? (
+                <Text style={styles.error}>{emailError}</Text>
+              ) : null}
 
               <TouchableOpacity
                 style={[styles.button, styles.secondaryButton]}
@@ -128,7 +179,9 @@ const ForgetPasswordScreen: React.FC = () => {
 
           {step === 'reset' && (
             <>
-              <Text style={styles.subtitle}>Enter your new password:</Text>
+              <Text style={styles.subtitle}>
+                Enter new password for {email}:
+              </Text>
 
               <View style={styles.passwordContainer}>
                 <TextInput
@@ -137,6 +190,7 @@ const ForgetPasswordScreen: React.FC = () => {
                   value={newPassword}
                   onChangeText={setNewPassword}
                   secureTextEntry={!showPassword}
+                  autoComplete="new-password"
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
@@ -150,9 +204,14 @@ const ForgetPasswordScreen: React.FC = () => {
                 </TouchableOpacity>
               </View>
 
-              {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
+              {emailError ? (
+                <Text style={styles.error}>{emailError}</Text>
+              ) : null}
 
-              <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
+              <TouchableOpacity 
+                style={styles.button} 
+                onPress={handleResetPassword}
+              >
                 <Text style={styles.buttonText}>Reset Password</Text>
               </TouchableOpacity>
             </>
@@ -242,5 +301,11 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 10,
     textAlign: 'center',
+  },
+  checking: {
+    color: '#666',
+    marginBottom: 10,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

@@ -38,30 +38,37 @@ const LoginScreen: React.FC = () => {
           'Content-Type': 'application/json'
         } 
       });
-      
-      if (!response.ok) throw new Error('Network response was not ok');
-      
-      const data = await response.json();
-      
-      
-      if (data.success && data.token) {
-   
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+      }
+      
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error('Failed to parse server response');
+      }
+
+      if (data.success && data.token) {
         const userId = data.user?.id;
         const userName = data.user?.username; 
         const userEmail = data.user?.email; 
-        
-     
+        const userPhone = data.user?.phone;
+
+        // Validate required user data
         if (!userId || !userName || !userEmail) {
-       
           throw new Error('Incomplete user data received from server');
         }
         
-       
+        // Login with all user data including phone
         await login(data.token, {
           id: userId,
           name: userName, 
-          email: userEmail
+          email: userEmail,
+          phone: userPhone || ''
         });
         
         Alert.alert('Success', 'Login successful!');
@@ -69,7 +76,6 @@ const LoginScreen: React.FC = () => {
         Alert.alert('Error', data.message || 'Invalid email or password');
       }
     } catch (error) {
-    
       Alert.alert('Error', 'Something went wrong. Please try again later.');
     } finally {
       setLoading(false);
