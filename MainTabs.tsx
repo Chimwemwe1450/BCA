@@ -9,7 +9,7 @@ import HomeScreen from './screen/HomeScreen';
 import ProfileScreen from './screen/ProfileScreen';
 import PersonalInfoScreen from './screen/Personalinfoscreen';
 import LanguageScreen from './screen/Languagescreen';
-
+import savedLocation from './screen/savedLocation';
 const Tab = createBottomTabNavigator();
 const ProfileStack = createNativeStackNavigator();
 
@@ -20,6 +20,7 @@ const ProfileStackNavigator = () => {
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
       <ProfileStack.Screen name="Language" component={LanguageScreen} />
+      <ProfileStack.Screen name="savedLocation" component={savedLocation}/>
     </ProfileStack.Navigator>
   );
 };

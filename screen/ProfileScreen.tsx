@@ -21,6 +21,7 @@ export type ProfileStackParamList = {
   ProfileMain: undefined;
   PersonalInfo: undefined;
   Language: undefined;
+  savedLocation: undefined; // ✅ Added savedLocation to the param list
 };
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'ProfileMain'>;
@@ -419,7 +420,10 @@ const ProfileScreen: React.FC = () => {
 
         <View style={styles.savedPlacesSection}>
           <Text style={styles.sectionTitle}>Saved places</Text>
-          <TouchableOpacity style={styles.enterLocationButton}>
+          <TouchableOpacity 
+            style={styles.enterLocationButton}
+            onPress={() => navigation.navigate('savedLocation')} // ✅ Added navigation
+          >
             <Text style={styles.enterLocationText}>Enter home location</Text>
           </TouchableOpacity>
         </View>
