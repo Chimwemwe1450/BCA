@@ -16,132 +16,67 @@ import { useAuth } from '../navigation/authContext';
 import { useNavigation } from '@react-navigation/native';
 
 const PersonalInfoScreen: React.FC = () => {
-  console.log('🚀 PersonalInfoScreen component rendering');
-  
   const { user, token, updateUser } = useAuth();
-  console.log('🔑 Auth context:', { 
-    userExists: !!user,
-    userId: user?.id,
-    userName: user?.name,
-    userPhone: user?.phone,
-    tokenExists: !!token,
-    tokenLength: token?.length
-  });
-  
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
-  console.log('⏳ Loading state:', loading);
   
   // Form state
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [editingField, setEditingField] = useState<string | null>(null);
-  
-  console.log('📝 Form state:', { name, phone, editingField });
 
   // Load user data when component mounts
   useEffect(() => {
-    console.log('🔄 useEffect triggered - loading user data');
     if (user) {
-      console.log('👤 User data found:', { 
-        name: user.name, 
-        phone: user.phone 
-      });
       setName(user.name || '');
       setPhone(user.phone || '');
-      console.log('✅ State updated with user data');
-    } else {
-      console.log('❌ No user data found in context');
     }
   }, [user]);
 
   const handlePhoneChange = (text: string) => {
-    console.log('📞 handlePhoneChange called with text:', text);
     // Ensure phone always starts with +27
     if (!text.startsWith('+27')) {
-      console.log('🔄 Phone does not start with +27, setting to +27');
       setPhone('+27');
     } else {
-      console.log('✅ Setting phone to:', text);
       setPhone(text);
     }
   };
 
   const handleSave = async (field: string) => {
-    console.log('💾 handleSave CALLED for field:', field);
-    console.log('📋 Current values - name:', `"${name}"`, 'phone:', `"${phone}"`);
-    
     if (field === 'name' && !name.trim()) {
-      console.log('❌ Validation failed: Name is required');
       Alert.alert('Error', 'Name is required');
       return;
     }
 
     if (field === 'phone') {
-      console.log('🔍 Validating phone field...');
       if (!phone.trim()) {
-        console.log('❌ Validation failed: Phone number is required');
         Alert.alert('Error', 'Phone number is required');
         return;
       }
       // Validate phone number format
       const phoneRegex = /^\+27[0-9]{9}$/;
-      const isValidPhone = phoneRegex.test(phone);
-      console.log('📞 Phone regex test:', isValidPhone, 'for phone:', phone);
-      console.log('📞 Phone length:', phone.length);
-      console.log('📞 Phone starts with +27:', phone.startsWith('+27'));
-      
-      if (!isValidPhone) {
-        console.log('❌ Validation failed: Phone format invalid');
+      if (!phoneRegex.test(phone)) {
         Alert.alert('Error', 'Please enter a valid South African phone number (e.g., +27123456789)');
         return;
       }
-      console.log('✅ Phone validation passed');
     }
 
-    // Add pre-flight checks
-    console.log('🔍 Pre-flight checks:');
-    console.log('👤 User ID:', user?.id);
-    console.log('🔑 Token exists:', !!token);
-    
-    if (!user?.id) {
-      console.log('❌ Pre-flight failed: No user ID');
-      Alert.alert('Error', 'User information is missing');
-      return;
-    }
-    
-    if (!token) {
-      console.log('❌ Pre-flight failed: No token');
-      Alert.alert('Error', 'Authentication token is missing');
-      return;
-    }
-
-    console.log('✅ All pre-flight checks passed');
-    
     try {
-      console.log('🔄 Starting API call to update user');
       setLoading(true);
-      console.log('⏳ Loading state set to true');
       
-      // FIX: Use proper field names that match backend (PascalCase)
+      // Use proper field names that match backend (PascalCase)
       const requestBody: any = {};
       
       if (field === 'name') {
         requestBody.Name = name.trim();
-        console.log('📤 Adding Name to request:', name.trim());
       }
       
       if (field === 'phone') {
         requestBody.Phone = phone.trim();
-        console.log('📤 Adding Phone to request:', phone.trim());
       }
       
-      console.log('📦 Final request body:', JSON.stringify(requestBody, null, 2));
-      
-      const apiUrl = `http://192.168.1.57:5291/api/Users/${user.id}`;
-      console.log('🌐 Making PUT request to:', apiUrl);
-      
-      const response = await fetch(apiUrl, {
+      // Update user data via API
+      const response = await fetch(`http://192.168.1.57:5291/api/Users/${user?.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -150,95 +85,34 @@ const PersonalInfoScreen: React.FC = () => {
         body: JSON.stringify(requestBody),
       });
 
-      console.log('📡 API Response status:', response.status);
-      console.log('✅ API Response ok:', response.ok);
-      
-      // Get the raw response text first
-      const responseText = await response.text();
-      console.log('📄 API Response raw text:', responseText);
-      console.log('📄 API Response text length:', responseText.length);
-      console.log('📄 API Response first 200 chars:', responseText.substring(0, 200));
-      
-      let result;
-      try {
-        result = responseText ? JSON.parse(responseText) : {};
-        console.log('📄 API Response parsed result:', result);
-      } catch (parseError) {
-        console.log('❌ JSON parse error:', parseError);
-   
-      }
+      const result = await response.json();
 
-      if (response.ok) {
-        // Check if result has success property or if we should consider 200 status as success
-        if (result.success || response.status === 200) {
-          console.log('🎉 API call successful, updating local state');
-          // Update local state
-          await updateUser({ 
-            name: name.trim(),
-            phone: phone.trim(),
-          });
-          
-          console.log('🔄 Resetting editing field');
-          setEditingField(null);
-          console.log('✅ Showing success alert');
-          Alert.alert('Success', 'Profile updated successfully');
-        } else {
-          console.log('❌ API returned 200 but success is false');
-          const errorMessage = result.error || result.message || 'Profile update failed';
-          Alert.alert('Error', errorMessage);
-        }
+      if (response.ok && result.success) {
+        // Update local state
+        await updateUser({ 
+          name: name.trim(),
+          phone: phone.trim(),
+        });
+        
+        setEditingField(null);
+        Alert.alert('Success', 'Profile updated successfully');
       } else {
-        console.log('❌ API call failed with status:', response.status);
-        
-        // Handle different error cases
-        let errorMessage = 'Failed to update profile';
-        
-        if (response.status === 400) {
-          errorMessage = 'Bad request - please check your input data';
-          if (result.error) errorMessage = result.error;
-          if (result.message) errorMessage = result.message;
-          if (result.errors) errorMessage = JSON.stringify(result.errors);
-          if (result.rawResponse && result.rawResponse.includes('validation')) {
-            errorMessage = 'Data validation failed - please check your input';
-          }
-        } else if (response.status === 401) {
-          errorMessage = 'Authentication failed - please login again';
-        } else if (response.status === 403) {
-          errorMessage = 'You do not have permission to update this profile';
-        } else if (response.status === 404) {
-          errorMessage = 'User not found';
-        } else if (response.status === 500) {
-          errorMessage = 'Server error - please try again later';
-        }
-        
-        console.log('📊 Final error message:', errorMessage);
-        Alert.alert('Error', errorMessage);
+        Alert.alert('Error', result.error || 'Failed to update profile');
       }
     } catch (error) {
-      console.log('💥 API call network error:', error);
-  
       Alert.alert('Error', 'Unable to connect to server');
     } finally {
-      console.log('🏁 API call completed, setting loading to false');
       setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    console.log('❌ handleCancel called');
-    console.log('📊 Original user data:', { 
-      name: user?.name, 
-      phone: user?.phone 
-    });
     // Reset to original values from user context
     setName(user?.name || '');
     setPhone(user?.phone || '');
     setEditingField(null);
-    console.log('🔄 State reset completed');
   };
 
-  console.log('🎨 Rendering UI components');
-  
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -246,10 +120,7 @@ const PersonalInfoScreen: React.FC = () => {
       <View style={styles.topHeader}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => {
-            console.log('⬅️ Back button pressed');
-            navigation.goBack();
-          }}
+          onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
@@ -266,10 +137,7 @@ const PersonalInfoScreen: React.FC = () => {
               {editingField !== 'name' && (
                 <TouchableOpacity 
                   style={styles.editButton}
-                  onPress={() => {
-                    console.log('✏️ Edit name button pressed');
-                    setEditingField('name');
-                  }}
+                  onPress={() => setEditingField('name')}
                 >
                   <Ionicons name="create-outline" size={18} color="#6366F1" />
                   <Text style={styles.editButtonText}>Edit</Text>
@@ -282,10 +150,7 @@ const PersonalInfoScreen: React.FC = () => {
                 <TextInput
                   style={styles.input}
                   value={name}
-                  onChangeText={(text) => {
-                    console.log('📝 Name input changed to:', text);
-                    setName(text);
-                  }}
+                  onChangeText={setName}
                   placeholder="Enter your name"
                   autoCapitalize="words"
                   autoFocus
@@ -293,10 +158,7 @@ const PersonalInfoScreen: React.FC = () => {
                 <View style={styles.editActions}>
                   <TouchableOpacity
                     style={[styles.actionButton, styles.cancelButton]}
-                    onPress={() => {
-                      console.log('❌ Name cancel button pressed');
-                      handleCancel();
-                    }}
+                    onPress={handleCancel}
                     disabled={loading}
                   >
                     <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -304,15 +166,7 @@ const PersonalInfoScreen: React.FC = () => {
                   <View style={styles.buttonSpacer} />
                   <TouchableOpacity
                     style={[styles.actionButton, styles.saveButton]}
-                    onPress={() => {
-                      console.log('💾 Name save button pressed');
-                      console.log('📊 Save button state:', {
-                        loading,
-                        nameEmpty: !name.trim(),
-                        disabled: loading || !name.trim()
-                      });
-                      handleSave('name');
-                    }}
+                    onPress={() => handleSave('name')}
                     disabled={loading || !name.trim()}
                   >
                     {loading ? (
@@ -334,10 +188,7 @@ const PersonalInfoScreen: React.FC = () => {
               {editingField !== 'phone' && (
                 <TouchableOpacity 
                   style={styles.editButton}
-                  onPress={() => {
-                    console.log('✏️ Edit phone button pressed');
-                    setEditingField('phone');
-                  }}
+                  onPress={() => setEditingField('phone')}
                 >
                   <Ionicons name="create-outline" size={18} color="#6366F1" />
                   <Text style={styles.editButtonText}>Edit</Text>
@@ -350,10 +201,7 @@ const PersonalInfoScreen: React.FC = () => {
                 <TextInput
                   style={styles.input}
                   value={phone}
-                  onChangeText={(text) => {
-                    console.log('📝 Phone input changed to:', text);
-                    handlePhoneChange(text);
-                  }}
+                  onChangeText={handlePhoneChange}
                   placeholder="+27XXXXXXXXX"
                   keyboardType="phone-pad"
                   autoCapitalize="none"
@@ -366,10 +214,7 @@ const PersonalInfoScreen: React.FC = () => {
                 <View style={styles.editActions}>
                   <TouchableOpacity
                     style={[styles.actionButton, styles.cancelButton]}
-                    onPress={() => {
-                      console.log('❌ Phone cancel button pressed');
-                      handleCancel();
-                    }}
+                    onPress={handleCancel}
                     disabled={loading}
                   >
                     <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -377,15 +222,7 @@ const PersonalInfoScreen: React.FC = () => {
                   <View style={styles.buttonSpacer} />
                   <TouchableOpacity
                     style={[styles.actionButton, styles.saveButton]}
-                    onPress={() => {
-                      console.log('💾 Phone save button pressed');
-                      console.log('📊 Save button state:', {
-                        loading,
-                        phoneEmpty: !phone.trim(),
-                        disabled: loading || !phone.trim()
-                      });
-                      handleSave('phone');
-                    }}
+                    onPress={() => handleSave('phone')}
                     disabled={loading || !phone.trim()}
                   >
                     {loading ? (
